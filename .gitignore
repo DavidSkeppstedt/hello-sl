@@ -26,6 +26,7 @@ _testmain.go
 #User added ignores down here
 config/
 keys/
+places/places
 
 #Vim ignor files
 *~
