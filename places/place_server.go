@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 var API_KEY string
@@ -31,42 +32,43 @@ func main() {
 
 func placeHandler(resWritter http.ResponseWriter, req *http.Request) {
 	log.Println("Incoming request to /place via", req.URL)
-	parameters := req.URL.Query()
+	resWritter.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
+	parameters := req.URL.Query()
 	if len(parameters) == 0 || parameters.Get("search") == "" {
 		log.Println("The wrong parameters was passed to the api. Parameters:", parameters)
-		resWritter.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		resWritter.WriteHeader(400) // unprocessable entity
+		resWritter.WriteHeader(http.StatusBadRequest) // unprocessable entity
 		payl := ErrorPayload{"wrong parameters. should be place/?search="}
 		json.NewEncoder(resWritter).Encode(payl)
 		return
 	}
 	searchString := parameters.Get("search")
-	SL_URL := "http://api.sl.se/api2/typeahead.json?key=" + API_KEY + "&searchstring=" + searchString
-	log.Println("SL:", SL_URL)
+	searchString = strings.Replace(searchString, " ", "", -1) //hack to fix sl broken api
+
+	SL_URL := "http://api.sl.se/api2/typeahead.json?key=" + API_KEY +
+		"&searchstring=" + searchString
+
+	//log.Println("SL:", SL_URL)
 
 	resp, errGet := http.Get(SL_URL) // call to SL-API.
-	checkError(errGet)
 	defer resp.Body.Close()
+	checkError(errGet)
 
 	body, errRead := ioutil.ReadAll(
 		io.LimitReader(resp.Body, 1048576))
 	checkError(errRead)
-
 	var answer Answer
 	if err := json.Unmarshal(body, &answer); err != nil && answer.StatusCode == 0 {
-		resWritter.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		resWritter.WriteHeader(422) // unprocessable entity
 		payl := ErrorPayload{"Something wrong with request to SL. :" + string(body)}
 		json.NewEncoder(resWritter).Encode(payl)
+		log.Println("Error unmarshal:", err)
 		return //panic(err)
 	}
 
-	resWritter.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	//Everyting is okay.
 	resWritter.WriteHeader(http.StatusOK)
-
 	payload := Payload{ConvertSitesToPlaces(answer.ResponseData)}
-
 	json.NewEncoder(resWritter).Encode(payload)
 }
 
