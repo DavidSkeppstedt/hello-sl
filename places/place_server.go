@@ -32,10 +32,6 @@ func main() {
 
 }
 
-func serveClient(w http.ResponseWriter, r *http.Request) {
-
-}
-
 func placeHandler(resWritter http.ResponseWriter, req *http.Request) {
 	log.Println("Incoming request to /place via", req.URL)
 	resWritter.Header().Set("Content-Type", "application/json; charset=UTF-8")
