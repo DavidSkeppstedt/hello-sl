@@ -32,5 +32,6 @@ places/places
 *~
 *.swp
 *.swo
-
+*.sublime-project
+*.sublime-workspace
 
