@@ -22,10 +22,16 @@ func main() {
 	//read api key here
 	checkError(initapi())
 	//set up routes
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/client/", http.StripPrefix("/client/", fs))
 	http.HandleFunc("/place", placeHandler)
 	//start the api server
 	log.Println("Server started and listens at port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
+
+}
+
+func serveClient(w http.ResponseWriter, r *http.Request) {
 
 }
 
