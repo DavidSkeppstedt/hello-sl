@@ -27,6 +27,7 @@ _testmain.go
 config/
 keys/
 places/places
+static/
 
 #Vim ignor files
 *~
